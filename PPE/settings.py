@@ -16,6 +16,7 @@ ALLOWED_HOSTS = ['*']
 
 # ── Applications ─────────────────────────────────────────────────────────────
 INSTALLED_APPS = [
+    'jazzmin',                          # ← DOIT être en premier
     'corsheaders',
     'rest_framework.authtoken',
     'rest_framework',
@@ -28,11 +29,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
-# ── Middleware (whitenoise juste après SecurityMiddleware) ───────────────────
+# ── Middleware ───────────────────────────────────────────────────────────────
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',        # ← ajouté
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -92,8 +93,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # ── Internationalisation ──────────────────────────────────────────────────────
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE     = 'UTC'
+LANGUAGE_CODE = 'fr-fr'
+TIME_ZONE     = 'Africa/Abidjan'
 USE_I18N      = True
 USE_TZ        = True
 
@@ -103,3 +104,70 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ── Jazzmin (thème admin) ─────────────────────────────────────────────────────
+JAZZMIN_SETTINGS = {
+    "site_title": "Will Admin",
+    "site_header": "Will – Assistant IA",
+    "site_brand": "✨ Will",
+    "site_logo": None,
+    "welcome_sign": "Bienvenue dans le panneau de gestion de Will",
+    "copyright": "PPE – IPNET 2026",
+    "search_model": ["auth.user", "api_assistant.message"],
+    "topmenu_links": [
+        {"name": "🏠 Accueil", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "🌐 API", "url": "/api/", "new_window": True},
+    ],
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user-circle",
+        "auth.Group": "fas fa-users",
+        "api_assistant.Message": "fas fa-comment-dots",
+        "api_assistant.Alarme": "fas fa-bell",
+        "api_assistant.AssistantStatus": "fas fa-robot",
+    },
+    "default_icon_parents": "fas fa-folder",
+    "default_icon_children": "fas fa-circle",
+    "related_modal_active": True,
+    "custom_css": None,
+    "custom_js": None,
+    "use_google_fonts_cdn": True,
+    "show_ui_builder": False,
+    "changeform_format": "horizontal_tabs",
+    "language_chooser": False,
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-white",
+    "accent": "accent-primary",
+    "navbar": "navbar-white navbar-light",
+    "no_navbar_border": False,
+    "navbar_fixed": True,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-light-primary",
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": True,
+    "sidebar_nav_compact_style": False,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "theme": "flatly",
+    "dark_mode_theme": None,
+    "button_classes": {
+        "primary": "btn-outline-primary",
+        "secondary": "btn-outline-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success",
+    },
+    "actions_sticky_top": True,
+}

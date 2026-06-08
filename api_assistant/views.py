@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404
 from django.core.cache import cache
 from datetime import datetime, time as dt_time
 import pytz, re, requests, urllib.parse
-from mistralai import Mistral
+from mistralai.client import MistralClient as Mistral
 from django.contrib.auth.models import User
 from .serializers import UserSerializer, MessageSerializer, AlarmeSerializer
 from .models import Message, Alarme, AssistantStatus
