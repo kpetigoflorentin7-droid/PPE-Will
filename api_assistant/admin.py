@@ -117,3 +117,33 @@ class EvaluationAdmin(admin.ModelAdmin):
 admin.site.site_header = "Will — Administration"
 admin.site.site_title = "Will Admin"
 admin.site.index_title = "Tableau de bord"
+
+
+# ── Domotique ─────────────────────────────────────────────────────────────────
+from .models import AppareilConnecte, EtatAppareil, CommandeAppareil
+
+
+class EtatAppareilInline(admin.StackedInline):
+    model = EtatAppareil
+    can_delete = False
+    readonly_fields = ('mis_a_jour',)
+    verbose_name = "État actuel"
+
+
+@admin.register(AppareilConnecte)
+class AppareilConnecteAdmin(admin.ModelAdmin):
+    inlines = [EtatAppareilInline]
+    list_display = ('nom', 'type_appareil', 'protocole', 'utilisateur', 'est_actif', 'date_ajout')
+    list_filter = ('type_appareil', 'protocole', 'est_actif')
+    search_fields = ('nom', 'utilisateur__username', 'adresse_ip')
+    list_editable = ('est_actif',)
+    ordering = ('utilisateur', 'type_appareil')
+
+
+@admin.register(CommandeAppareil)
+class CommandeAppareilAdmin(admin.ModelAdmin):
+    list_display = ('appareil', 'commande', 'statut', 'source', 'utilisateur', 'date_commande')
+    list_filter = ('statut', 'source', 'commande')
+    search_fields = ('appareil__nom', 'utilisateur__username')
+    readonly_fields = ('date_commande', 'appareil', 'utilisateur', 'commande', 'parametres')
+    ordering = ('-date_commande',)

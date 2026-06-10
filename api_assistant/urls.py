@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import *
+from .views_domotique import device_list_create, device_detail, device_control, device_state
 
 urlpatterns = [
     # Authentification & Profil
@@ -24,4 +25,10 @@ urlpatterns = [
 
     # Synchronisation des apps installées
     path('sync-apps/', sync_apps, name='sync-apps'),
+
+    # Domotique
+    path('devices/',                  device_list_create, name='device-list-create'),
+    path('devices/<int:pk>/',         device_detail,      name='device-detail'),
+    path('devices/<int:pk>/control/', device_control,     name='device-control'),
+    path('devices/<int:pk>/state/',   device_state,       name='device-state'),
 ]

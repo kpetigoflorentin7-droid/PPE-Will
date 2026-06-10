@@ -141,6 +141,8 @@ JAZZMIN_SETTINGS = {
         "api_assistant.Alarme": "fas fa-bell",
         "api_assistant.AssistantStatus": "fas fa-robot",
         "api_assistant.Evaluation": "fas fa-star",
+        "api_assistant.AppareilConnecte": "fas fa-plug",
+        "api_assistant.CommandeAppareil": "fas fa-terminal",
     },
     "default_icon_parents": "fas fa-folder",
     "default_icon_children": "fas fa-circle",

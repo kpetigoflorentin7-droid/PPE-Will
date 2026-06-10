@@ -25,3 +25,32 @@ class AlarmeSerializer(serializers.ModelSerializer):
         model = Alarme
         fields = ['id', 'heure', 'message', 'activee']
         read_only_fields = ['id']
+from .models import AppareilConnecte, EtatAppareil, CommandeAppareil
+
+
+class EtatAppareilSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = EtatAppareil
+        fields = ['allume', 'temperature', 'mode_clim', 'luminosite',
+                  'couleur', 'volume', 'chaine', 'mis_a_jour']
+
+
+class AppareilConnecteSerializer(serializers.ModelSerializer):
+    etat = EtatAppareilSerializer(read_only=True)
+
+    class Meta:
+        model  = AppareilConnecte
+        fields = ['id', 'nom', 'type_appareil', 'protocole',
+                  'adresse_ip', 'adresse_mac', 'topic_mqtt',
+                  'est_actif', 'date_ajout', 'etat']
+        read_only_fields = ['date_ajout']
+
+
+class CommandeAppareilSerializer(serializers.ModelSerializer):
+    appareil_nom = serializers.CharField(source='appareil.nom', read_only=True)
+
+    class Meta:
+        model  = CommandeAppareil
+        fields = ['id', 'appareil', 'appareil_nom', 'commande',
+                  'parametres', 'statut', 'source', 'date_commande']
+        read_only_fields = ['date_commande', 'statut']
