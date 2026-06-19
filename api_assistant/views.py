@@ -8,15 +8,16 @@ from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
 from django.core.cache import cache
 from datetime import datetime, time as dt_time
-import pytz, re, requests, urllib.parse
-from mistralai.client import MistralClient as Mistral
+import pytz, re, requests, urllib.parse, os
+from google import genai
 from django.contrib.auth.models import User
 from .serializers import UserSerializer, MessageSerializer, AlarmeSerializer
-from .models import Message, Alarme, AssistantStatus
+from .models import Message, Alarme, AssistantStatus, AppareilConnecte
+from .views_domotique import executer_commande
 
 # ─── CONFIG ─────────────────────────────────────────────────────────────────
-MISTRAL_API_KEY = "lFnqxunw1tRbn1zdfHfxPNtVk3u0cHL2"
-client = Mistral(api_key=MISTRAL_API_KEY)
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -156,6 +157,81 @@ def _detecter_intention(prompt: str) -> dict | None:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+#  DOMOTIQUE — "Will, allume la lumière du salon"
+# ═══════════════════════════════════════════════════════════════════════════
+MOTS_ALLUMER  = ["allume", "allumer", "active", "mets en marche", "met en marche"]
+MOTS_ETEINDRE = ["éteins", "eteins", "éteindre", "eteindre", "coupe", "couper",
+                  "arrête", "arrete", "désactive", "desactive"]
+
+
+def _trouver_appareil(user, p_low: str):
+    """
+    Cherche, parmi les appareils de l'utilisateur, celui dont le nom (ou le
+    type) est mentionné dans la phrase. Si l'utilisateur n'a qu'un seul
+    appareil actif, on le prend par défaut (cas du prototype : une lampe).
+    """
+    appareils = list(AppareilConnecte.objects.filter(utilisateur=user, est_actif=True))
+    if not appareils:
+        return None
+
+    for app in appareils:
+        if app.nom.lower() in p_low:
+            return app
+
+    # Recherche par type (ex. "lumière", "lampe" → type 'led')
+    TYPE_MOTS = {
+        'led':         ["lumière", "lumiere", "lampe", "led"],
+        'television':  ["télé", "tele", "télévision", "television", "tv"],
+        'climatiseur': ["clim", "climatiseur", "climatisation"],
+        'microonde':   ["micro-onde", "micro onde", "microonde"],
+    }
+    for app in appareils:
+        mots = TYPE_MOTS.get(app.type_appareil, [])
+        if any(mot in p_low for mot in mots):
+            return app
+
+    # Un seul appareil dans le système (cas typique du prototype concours)
+    if len(appareils) == 1:
+        return appareils[0]
+
+    return None
+
+
+def _traiter_domotique(user, p_low: str):
+    """
+    Retourne (reponse_ia, action_data) si la phrase est une commande
+    domotique reconnue (allumer/éteindre un appareil), sinon None.
+    """
+    veut_allumer  = any(m in p_low for m in MOTS_ALLUMER)
+    veut_eteindre = any(m in p_low for m in MOTS_ETEINDRE)
+
+    if not (veut_allumer or veut_eteindre):
+        return None
+
+    appareil = _trouver_appareil(user, p_low)
+    if not appareil:
+        return None  # pas d'appareil reconnu → on laisse tomber sur l'IA générale
+
+    commande = "on" if veut_allumer else "off"
+    envoye, cmd, etat = executer_commande(appareil, commande, {}, user, source="vocal")
+
+    if envoye:
+        verbe = "allumé" if commande == "on" else "éteint"
+        reponse_ia = f"C'est fait {user.username} ! {appareil.nom} est {verbe}."
+    else:
+        reponse_ia = f"Je n'ai pas réussi à contacter {appareil.nom}, vérifie la connexion."
+
+    action_data = {
+        "action": "DEVICE_CONTROL",
+        "appareil_id": appareil.id,
+        "appareil_nom": appareil.nom,
+        "commande": commande,
+        "succes": envoye,
+    }
+    return reponse_ia, action_data
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 #  CŒUR DU TRAITEMENT — commun au chat et aux commandes vocales
 # ═══════════════════════════════════════════════════════════════════════════
 def _traiter_message(user, prompt: str):
@@ -193,6 +269,10 @@ def _traiter_message(user, prompt: str):
             reponse_ia  = intention.pop("reponse_ia")
             action_data = intention
             cache.set(f"will_pending_action_{user.id}", action_data, timeout=30)
+
+        # ── 0bis. Domotique (allumer / éteindre un appareil réel) ────────
+        elif (domo := _traiter_domotique(user, p_low)) is not None:
+            reponse_ia, action_data = domo
 
         # ── 1. Suppression d'alarme ──────────────────────────────────────
         elif (any(m in p_low for m in MOTS_SUPPR)
@@ -339,7 +419,7 @@ def _traiter_message(user, prompt: str):
             except Exception:
                 reponse_ia = "Je ne peux pas récupérer la météo pour l'instant."
 
-        # ── 6. IA Mistral (conversation générale) ───────────────────────
+        # ── 6. IA Gemini (conversation générale) ─────────────────────────
         else:
             contexte = (
                 f"Tu es Will, l'assistant vocal personnel de {user.username}. "
@@ -349,20 +429,22 @@ def _traiter_message(user, prompt: str):
                 f"l'assistant de {user.username}."
             )
             try:
-                chat_res = client.chat.complete(
-                    model="open-mistral-7b",
-                    messages=[
-                        {"role": "system", "content": contexte},
-                        {"role": "user",   "content": prompt},
-                    ],
-                    max_tokens=200,
+                response = client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=f"""
+{contexte}
+
+Utilisateur :
+{prompt}
+""",
                 )
-                reponse_ia = chat_res.choices[0].message.content.strip()
+                reponse_ia = response.text.strip()
                 # Nettoie les caractères markdown qui sonnent mal à l'oral
                 reponse_ia = re.sub(r'[*_#`]', '', reponse_ia)
             except Exception as e:
                 reponse_ia = "Désolé, je n'ai pas pu répondre pour l'instant."
-                print(f"❌ Mistral error: {e}")
+                print(f"❌ Gemini error: {e}")
+
 
         # ── Sauvegarde en base ───────────────────────────────────────────
         msg = Message.objects.create(

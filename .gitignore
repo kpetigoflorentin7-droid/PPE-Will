@@ -1,1 +1,21 @@
-"__pycache__/*.pycdb.sqlite3.env.vscode/" 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Django
+db.sqlite3
+*.sqlite3
+
+# Environment
+.env
+.env.*
+
+# Virtual env
+venv/
+env/
+.venv/
+
+# OS / editor
+.vscode/
+.idea/

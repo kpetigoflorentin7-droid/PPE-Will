@@ -5,6 +5,9 @@ Django settings for PPE project.
 from pathlib import Path
 import os
 import dj_database_url
+from dotenv import load_dotenv
+
+load_dotenv()  # charge les variables du fichier .env (GEMINI_API_KEY, etc.)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -57,6 +60,16 @@ CORS_ALLOW_ALL_ORIGINS = True
 TWILIO_ACCOUNT_SID  = os.environ.get('TWILIO_ACCOUNT_SID', 'TON_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN   = os.environ.get('TWILIO_AUTH_TOKEN', 'TON_AUTH_TOKEN')
 TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER', '+17756000893')
+
+# ── MQTT (broker Mosquitto tournant sur le PC pendant la démo) ───────────────
+# En local, le broker tourne sur le même PC que Django → host = 127.0.0.1
+# Pour la démo, le PC et l'ESP32 doivent être sur le même réseau Wi-Fi ;
+# remplacer MQTT_BROKER_HOST par l'IP du PC sur ce réseau (ex. 192.168.1.42)
+# si l'ESP32 n'arrive pas à joindre 127.0.0.1.
+MQTT_BROKER_HOST = os.environ.get('MQTT_BROKER_HOST', '127.0.0.1')
+MQTT_BROKER_PORT = int(os.environ.get('MQTT_BROKER_PORT', '1883'))
+MQTT_USERNAME    = os.environ.get('MQTT_USERNAME', 'will')
+MQTT_PASSWORD    = os.environ.get('MQTT_PASSWORD', 'will2026')
 
 ROOT_URLCONF = 'PPE.urls'
 
