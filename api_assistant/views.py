@@ -17,7 +17,30 @@ from .views_domotique import executer_commande
 
 # ─── CONFIG ─────────────────────────────────────────────────────────────────
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-client = genai.Client(api_key=GEMINI_API_KEY)
+
+# Le client Gemini n'est plus créé au chargement du module : si la clé est
+# absente, le serveur démarre quand même (l'admin, les alarmes, la météo,
+# la domotique, etc. continuent de fonctionner). L'erreur n'apparaît que si
+# quelqu'un déclenche réellement une réponse IA générale.
+_genai_client = None
+
+
+def get_genai_client():
+    """
+    Retourne une instance unique (singleton) du client Gemini, créée à la
+    première utilisation. Lève une exception claire si la clé manque,
+    au lieu de faire planter tout le projet Django au démarrage.
+    """
+    global _genai_client
+    if _genai_client is None:
+        if not GEMINI_API_KEY:
+            raise ValueError(
+                "GEMINI_API_KEY n'est pas configurée. "
+                "Ajoute-la dans les variables d'environnement (.env en local, "
+                "dashboard Render en production)."
+            )
+        _genai_client = genai.Client(api_key=GEMINI_API_KEY)
+    return _genai_client
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -399,7 +422,7 @@ def _traiter_message(user, prompt: str):
             if m_ville:
                 ville = m_ville.group(1).strip().capitalize()
 
-            api_key = "00192cef4b75b678c3a83924c08ce994"
+            api_key = os.getenv("OPENWEATHER_API_KEY", "")
             url = (f"https://api.openweathermap.org/data/2.5/weather"
                    f"?q={ville}&appid={api_key}&units=metric&lang=fr")
             try:
@@ -429,6 +452,7 @@ def _traiter_message(user, prompt: str):
                 f"l'assistant de {user.username}."
             )
             try:
+                client = get_genai_client()
                 response = client.models.generate_content(
                     model="gemini-2.5-flash",
                     contents=f"""
@@ -609,7 +633,7 @@ def check_will(request):
 @permission_classes([IsAuthenticated])
 def get_weather(request):
     city    = request.query_params.get('city', 'Lome')
-    api_key = "00192cef4b75b678c3a83924c08ce994"
+    api_key = os.getenv("OPENWEATHER_API_KEY", "")
     url     = (f"https://api.openweathermap.org/data/2.5/forecast"
                f"?q={city}&appid={api_key}&units=metric&lang=fr")
     try:
