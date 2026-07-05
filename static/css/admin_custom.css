@@ -1,0 +1,66 @@
+/* ── Fond dégradé sur les pages de l'admin ─────────────────────────────── */
+body.theme-darkly {
+    background: linear-gradient(135deg, #1e2a3a 0%, #2c3e50 100%);
+    min-height: 100vh;
+}
+
+/* ── Cartes avec coins arrondis + ombre + effet de survol ──────────────── */
+.card,
+.small-box {
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card:hover,
+.small-box:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
+}
+
+/* ── Boutons plus modernes ──────────────────────────────────────────────── */
+.btn {
+    border-radius: 8px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #4e73df 0%, #2e59d9 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    box-shadow: 0 6px 16px rgba(78, 115, 223, 0.45);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #1cc88a 0%, #17a673 100%);
+    border: none;
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
+    border: none;
+}
+
+/* ── Sidebar : liens actifs plus visibles ──────────────────────────────── */
+.nav-sidebar .nav-link.active {
+    background: rgba(78, 115, 223, 0.25);
+    border-left: 3px solid #4e73df;
+}
+
+/* ── Petites cartes de statistiques (small-box) — texte plus lisible ──── */
+.small-box .inner h3 {
+    font-weight: 700;
+    font-size: 2.1rem;
+}
+
+.small-box .icon {
+    opacity: 0.35;
+}

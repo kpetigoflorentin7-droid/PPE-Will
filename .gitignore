@@ -1,0 +1,14 @@
+.env
+db.sqlite3
+venv/
+__pycache__/
+*.pyc
+staticfiles/
+*.log
+.vscode/
+will_model/
+will_samples/
+WillMaisonVirtuelle/Library/
+WillMaisonVirtuelle/Temp/
+WillMaisonVirtuelle/Logs/
+WillMaisonVirtuelle/obj/
