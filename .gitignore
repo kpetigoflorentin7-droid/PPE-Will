@@ -1,3 +1,4 @@
+HEAD
 .env
 db.sqlite3
 venv/
@@ -12,3 +13,26 @@ WillMaisonVirtuelle/Library/
 WillMaisonVirtuelle/Temp/
 WillMaisonVirtuelle/Logs/
 WillMaisonVirtuelle/obj/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Django
+db.sqlite3
+*.sqlite3
+
+# Environment
+.env
+.env.*
+
+# Virtual env
+venv/
+env/
+.venv/
+
+# OS / editor
+.vscode/
+.idea/
+965f2c1c93cfade44410bcbd4c465d88ba0a4644
