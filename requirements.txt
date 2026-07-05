@@ -28,6 +28,7 @@ twilio==9.9.1
 tzdata==2025.3
 urllib3==2.6.3
 yarl==1.22.0
+django-jazzmin==3.0.1
 psycopg[binary]
 gunicorn==23.0.0
 whitenoise==6.7.0
